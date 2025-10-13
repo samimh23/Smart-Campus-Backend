@@ -13,6 +13,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UserRole } from './entities/role.enum';
 import { ResetCode } from './entities/reset-code.entity';
 import { ActiverDto } from './dto/activer.dto';
+import * as nodemailer from 'nodemailer';
 import { title } from 'process';
 
 
@@ -25,6 +26,35 @@ export class UserService {
     private readonly jwtservice: JwtService,
     @InjectRepository(ResetCode) private readonly resetRepo: Repository<ResetCode>,
   ){}
+
+
+  async signup(createUserDto: CreateUserDto) {
+  // Vérifier si l'email ou le téléphone existe déjà
+  const existingUser = await this.userRepo.findOne({
+    where: [
+      { email: createUserDto.email },
+      { phone: createUserDto.phone }
+    ]
+  });
+
+  if (existingUser) {
+    throw new BadRequestException('Email or phone already in use');
+  }
+
+  // Hasher le mot de passe
+  const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+  const user = this.userRepo.create({
+    ...createUserDto,
+    password: hashedPassword,
+    is_active: false // l'utilisateur sera activé plus tard via activerCompte
+  });
+
+  await this.userRepo.save(user);
+
+  return { success: true, message: 'User created successfully', userId: user.id };
+}
+
 
   async login(login: Logindto, res){
     
@@ -61,6 +91,92 @@ export class UserService {
 
     // return await bcrypt.hash('password', 10);
   }
+
+
+  async sendResetCode(email: string) {
+  const user = await this.userRepo.findOne({ where: { email } });
+  if (!user) throw new BadRequestException('User not found');
+
+  // Generate 6-digit OTP
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // Save to ResetCode entity
+  const resetCode = this.resetRepo.create({
+    code,
+    user,
+    expiresAt: new Date(Date.now() + 10 * 60 * 1000), // expires in 10 mins
+  });
+  await this.resetRepo.save(resetCode);
+  
+  console.log(`OTP for ${email}: ${code}`); // just log OTP
+  return { success: true, message: 'OTP generated', otp: code };
+  // Send email
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Password Reset Code',
+    text: `Your OTP code is: ${code}`,
+  });
+
+  return { success: true, message: 'OTP sent to your email' };
+}
+
+
+
+async verifyResetCode(email: string, code: string) {
+  const user = await this.userRepo.findOne({ where: { email } });
+  if (!user) throw new BadRequestException('User not found');
+
+  const resetCode = await this.resetRepo.findOne({
+    where: { user: { id: user.id }, code },
+  });
+
+  if (!resetCode || resetCode.expiresAt < new Date()) {
+    throw new BadRequestException('Invalid or expired code');
+  }
+
+  return { success: true, message: 'OTP verified', userId: user.id };
+}
+
+
+
+
+
+async resetPassword(email: string, otp: string, newPassword: string) {
+  const user = await this.userRepo.findOne({ where: { email } });
+  if (!user) throw new BadRequestException('User not found');
+
+  const resetCode = await this.resetRepo.findOne({
+    where: { user: { id: user.id }, code: otp },
+  });
+
+  if (!resetCode || resetCode.expiresAt < new Date()) {
+    throw new BadRequestException('Invalid or expired OTP');
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  user.password = hashedPassword;
+  await this.userRepo.save(user);
+
+  // Remove used reset code
+  await this.resetRepo.remove(resetCode);
+
+  return { success: true, message: 'Password reset successfully' };
+}
+
+
+
+
+
+
 
 
   async verifyEmail(email: string){

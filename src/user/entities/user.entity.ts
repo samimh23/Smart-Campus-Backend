@@ -34,4 +34,12 @@ export class User {
 
   // @OneToMany(() => RefreshToken, (token) => token.user)
   // refreshTokens: RefreshToken[]
+
+
+
+   @Column({ nullable: true })
+  resetCode: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  resetCodeExpiry: Date;
 }

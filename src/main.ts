@@ -8,7 +8,7 @@ async function bootstrap() {
   //app.useGlobalPipes(new ValidationPipe())
   app.useGlobalInterceptors(new LoggingInterceptor());
   app.enableCors({
-    origin: 'http://localhost:5173', // 👈 Frontend origin
+    origin: 'http://localhost:3001', // 👈 Frontend origin
     credentials: true,               // 👈 Allow cookies (needed for HttpOnly auth)
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

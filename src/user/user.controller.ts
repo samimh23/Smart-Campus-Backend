@@ -19,10 +19,38 @@ export class UserController {
   test(@CurrentUser() user){
     return user
   }
+
+  @Post('/signup')
+async signup(@Body() createUserDto: CreateUserDto) {
+  return this.userService.signup(createUserDto);
+}
+
   @Post('/login')
   login(@Body() user: Logindto, @Res({ passthrough: true }) res){
     return this.userService.login(user, res);
   }
+
+
+
+
+
+  @Post('/forgot-password')
+async forgotPassword(@Body('email') email: string) {
+  return this.userService.sendResetCode(email);
+}
+
+@Post('/verify-otp')
+async verifyOtp(@Body() body: { email: string, code: string }) {
+  return this.userService.verifyResetCode(body.email, body.code);
+}
+
+@Post('/reset-password')
+async resetPassword(@Body() body: { email: string; otp: string; newPassword: string }) {
+  return this.userService.resetPassword(body.email, body.otp, body.newPassword);
+}
+
+
+
 
   @Post()
   create(@Body() createUserDto: CreateUserDto) {

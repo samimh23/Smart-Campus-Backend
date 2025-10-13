@@ -13,8 +13,8 @@ import { AuthModule } from './auth/auth.module';
       host: 'localhost',
       port: 5432,
       username: 'postgres',
-      password: '',
-      database: 'db_name',
+      password: 'wiem2002',
+      database: 'db_Smart',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
       autoLoadEntities: true, // 👈 Automatically loads all entities registered with TypeOrmModule.forFeature()
