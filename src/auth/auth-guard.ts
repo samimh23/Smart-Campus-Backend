@@ -11,7 +11,7 @@ import { Reflector } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
-import { UserRole } from '../user/entities/role.enum';
+import { UserRole } from 'src/user/entities/role.enum';
 
 @Injectable()
 export class Protect implements CanActivate {
@@ -24,44 +24,38 @@ export class Protect implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredRoles = this.reflector.get<UserRole[]>('roles', context.getHandler());
     const request = context.switchToHttp().getRequest();
-    const token = request.headers.authorization?.split(' ')[1];
+    const authHeader = request.headers.authorization;
 
+    if (!authHeader) {
+      throw new UnauthorizedException('Missing authorization header');
+    }
+
+    const token = authHeader.split(' ')[1];
     if (!token) {
       throw new UnauthorizedException('Missing token');
     }
 
     try {
-      const data = await this.jwtService.verify(token, { ignoreExpiration: false });
+      // Verify token
+      const data: any = this.jwtService.verify(token); // default secret from JwtModule
 
-      // Find base user
-      // const user = await this.userRepo.findOne({ where: { id: payload.userId } });
-      // if (!user) throw new UnauthorizedException('User not found');
+      // Load user from database
+      const user = await this.userRepo.findOne({ where: { id: data.id } });
+      if (!user) throw new UnauthorizedException('User not found');
 
-      const user = data.user
       // Role check
       if (requiredRoles && requiredRoles.length > 0 && !requiredRoles.includes(user.role)) {
-        throw new ForbiddenException(`Requires one of roles: ${requiredRoles.join(', ')}`);
+        throw new ForbiddenException(
+          `Requires one of roles: ${requiredRoles.join(', ')}`,
+        );
       }
 
-      // Load role-specific profile
-      let profile = null;
-      // console.log(user)
-      switch (user.role) {//get each profile from its repo
-        case UserRole.ADMIN:
-          profile = user; // Admin might not have a separate profile
-          break;
-        case UserRole.TEACHER:
-          profile = user;
-          break;
-        case UserRole.STUDENT:
-          profile = user;
-          break;
-      }
+      // Attach user to request
+      request.user = user;
 
-      request.user = { ...user, profile };
-      // request.user = profile
       return true;
     } catch (err) {
+      console.error(err);
       throw new UnauthorizedException('Invalid or expired token');
     }
   }

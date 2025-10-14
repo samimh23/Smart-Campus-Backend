@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Repository } from 'typeorm';
@@ -28,7 +28,7 @@ export class UserService {
   ){}
 
 
-  async signup(createUserDto: CreateUserDto) {
+async signup(createUserDto: CreateUserDto) {
   // Vérifier si l'email ou le téléphone existe déjà
   const existingUser = await this.userRepo.findOne({
     where: [
@@ -56,41 +56,74 @@ export class UserService {
 }
 
 
-  async login(login: Logindto, res){
-    
-    let user = await this.userRepo.findOne({
-      where: { email: login.email }
-    })
 
-    if (!user) {
-      throw new BadRequestException('wrong login')
+
+
+  async createUserByAdmin(adminUser: User, createUserDto: CreateUserDto & { role: UserRole }) {
+    if (adminUser.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Only admin can create users');
     }
 
-    const is_correcte = await bcrypt.compare(login.password, user.password)
+    const existingUser = await this.userRepo.findOne({
+      where: [
+        { email: createUserDto.email },
+        { phone: createUserDto.phone }
+      ]
+    });
 
-    if(!is_correcte){
-      throw new BadRequestException('wrong passwor')
+    if (existingUser) {
+      throw new BadRequestException('Email or phone already in use');
     }
 
-    const { accessToken, refreshToken } = await this.generateUserTokens(user)
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+    const user = this.userRepo.create({
+      ...createUserDto,
+      password: hashedPassword,
+      role: createUserDto.role,
+      is_active: createUserDto.role === UserRole.ADMIN ? true : false
+    });
+
+    await this.userRepo.save(user);
+
+    return { success: true, message: 'User created by admin', userId: user.id };
+  }
 
 
 
-    // 🍪 Set cookie
+  async login(login: Logindto, res) {
+    const user = await this.userRepo.findOne({ where: { email: login.email } });
+    if (!user) throw new BadRequestException('Wrong email');
+    if (!user.is_active) throw new UnauthorizedException('Account not activated');
+
+    const isCorrect = await bcrypt.compare(login.password, user.password);
+    if (!isCorrect) throw new BadRequestException('Wrong password');
+
+    const { accessToken, refreshToken } = await this.generateUserTokens(user);
+
     res.cookie('refresh_token', refreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          maxAge: 60 * 60 * 1000, // 1 hour
-          sameSite: 'lax',
-    })
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: 'lax',
+    });
 
     return {
+      success: true,
+      message: 'Login successful',
       token: accessToken,
-      user
-    }
-
-    // return await bcrypt.hash('password', 10);
+      role: user.role, // important for frontend
+      user: {
+        id: user.id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        role: user.role,
+      },
+    };
   }
+
+
 
 
   async sendResetCode(email: string) {
@@ -229,26 +262,18 @@ async resetPassword(email: string, otp: string, newPassword: string) {
 
 
   async generateUserTokens(user: User) {
-    const accessToken = this.jwtservice.sign({ user });
-    const refreshToken = uuidv4(); // Génération d'un UUID pour le token d'actualisation
-
+    const payload = { id: user.id, email: user.email, role: user.role };
+    const accessToken = this.jwtservice.sign(payload);
+    const refreshToken = uuidv4();
     await this.storeRefreshToken(refreshToken, user);
-
-    return {
-      accessToken,
-      refreshToken,
-    };
+    return { accessToken, refreshToken };
   }
 
   async storeRefreshToken(token: string, user: User) {
     const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + 7); // Le token d'actualisation expire dans 3 jours
+    expiryDate.setDate(expiryDate.getDate() + 7);
 
-    await this.refreshrepo.save({
-      user, // i can pass { id: userId } not the hole user
-      token,
-      expiresAt: expiryDate
-    })
+    await this.refreshrepo.save({ user, token, expiresAt: expiryDate });
   }
 
 

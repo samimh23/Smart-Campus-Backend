@@ -10,7 +10,7 @@ export class User {
 
   @Column({ type: 'enum', enum: UserRole })
   role: UserRole
-
+  
   @Column()
   first_name: string;
 

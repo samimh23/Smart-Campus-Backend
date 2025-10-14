@@ -20,10 +20,30 @@ export class UserController {
     return user
   }
 
+
+ 
+
   @Post('/signup')
-async signup(@Body() createUserDto: CreateUserDto) {
-  return this.userService.signup(createUserDto);
-}
+  async signup(@Body() createUserDto: CreateUserDto) {
+    return this.userService.createUserByAdmin(
+      { role: UserRole.ADMIN } as any, // fake admin to assign STUDENT role
+      { ...createUserDto, role: UserRole.STUDENT },
+    );
+  }
+
+
+   
+
+
+  @UseGuards(Protect)
+  @Roles(UserRole.ADMIN)
+  @Post('/admin/create-user')
+  async createUserByAdmin(
+    @CurrentUser() user,
+    @Body() createUserDto: CreateUserDto & { role: UserRole },
+  ) {
+    return this.userService.createUserByAdmin(user, createUserDto);
+  }
 
   @Post('/login')
   login(@Body() user: Logindto, @Res({ passthrough: true }) res){
@@ -96,4 +116,24 @@ async resetPassword(@Body() body: { email: string; otp: string; newPassword: str
   remove(@Param('id') id: string) {
     return this.userService.remove(+id);
   }
+
+
+
+
+
+  @Post('/create-initial-admin')
+  async createInitialAdmin() {
+    return this.userService.signup({
+      first_name: 'Wiem',
+      last_name: 'Ayari',
+      email: 'wiem.ayari@esprit.tn',
+      password: 'admin123',
+      role: UserRole.ADMIN,
+      username: undefined,
+      phone: undefined,
+      is_active: undefined
+    });
+  }
+
+  
 }
