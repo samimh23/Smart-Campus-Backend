@@ -261,6 +261,24 @@ async resetPassword(email: string, otp: string, newPassword: string) {
   }
 
 
+
+
+  async findByRole(role: UserRole): Promise<User[]> {
+  const users = await this.userRepo.find({
+    where: { role },
+    order: { first_name: 'ASC' }, 
+  });
+
+  if (!users.length) {
+    throw new BadRequestException(`No users found with role: ${role}`);
+  }
+
+  return users;
+}
+
+
+
+
   async generateUserTokens(user: User) {
     const payload = { id: user.id, email: user.email, role: user.role };
     const accessToken = this.jwtservice.sign(payload);
@@ -275,6 +293,47 @@ async resetPassword(email: string, otp: string, newPassword: string) {
 
     await this.refreshrepo.save({ user, token, expiresAt: expiryDate });
   }
+
+
+
+
+
+  async toggleUserActivation(adminUser: User, userId: number, activate: boolean) {
+  if (adminUser.role !== UserRole.ADMIN) {
+    throw new ForbiddenException('Only admin can change activation status');
+  }
+
+  const user = await this.userRepo.findOne({ where: { id: userId } });
+  if (!user) {
+    throw new BadRequestException('User not found');
+  }
+
+  if (user.role === UserRole.ADMIN) {
+    throw new ForbiddenException('Cannot deactivate another admin');
+  }
+
+  user.is_active = activate;
+  await this.userRepo.save(user);
+
+  return {
+    success: true,
+    message: activate
+      ? `User ${user.first_name} ${user.last_name} activated successfully`
+      : `User ${user.first_name} ${user.last_name} deactivated successfully`,
+    user: {
+      id: user.id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email: user.email,
+      role: user.role,
+      is_active: user.is_active,
+    },
+  };
+}
+
+
+
+
 
 
   create(createUserDto: CreateUserDto) {

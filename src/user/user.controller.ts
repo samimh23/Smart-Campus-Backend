@@ -135,5 +135,35 @@ async resetPassword(@Body() body: { email: string; otp: string; newPassword: str
     });
   }
 
-  
+
+
+
+
+  @UseGuards(Protect)
+@Roles(UserRole.ADMIN)
+@Post('/admin/toggle-activation/:id')
+async toggleUserActivation(
+  @CurrentUser() adminUser,
+  @Param('id') id: number,
+  @Body('activate') activate: boolean,
+) {
+  return this.userService.toggleUserActivation(adminUser, id, activate);
+}
+
+
+
+
+
+
+
+
+
+
+    @UseGuards(Protect)
+  @Roles(UserRole.ADMIN)
+  @Get('/users/role/:role')
+  async getUsersByRole(@Param('role') role: UserRole) {
+    return this.userService.findByRole(role);
+  }
+
 }
