@@ -6,6 +6,7 @@ import { CreateHomeworkDto } from './dto/create-homework.dto';
 import { UpdateHomeworkDto } from './dto/update-homework.dto';
 import { User } from '../user/entities/user.entity';
 import { UserRole } from '../user/entities/role.enum';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 
 @Injectable()
 export class HomeworkService {
@@ -14,6 +15,7 @@ export class HomeworkService {
     private homeworkRepository: Repository<Homework>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private notificationsGateway: NotificationsGateway,
   ) {}
 
   async create(createHomeworkDto: CreateHomeworkDto, teacherId: number): Promise<Homework> {
@@ -32,7 +34,12 @@ export class HomeworkService {
       deadline: new Date(createHomeworkDto.deadline)
     });
 
-    return await this.homeworkRepository.save(homework);
+    const savedHomework = await this.homeworkRepository.save(homework);
+    
+    // Envoyer une notification à tous les étudiants
+    this.notificationsGateway.notifyNewHomework(savedHomework);
+    
+    return savedHomework;
   }
 
   async findAll(): Promise<Homework[]> {

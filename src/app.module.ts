@@ -6,6 +6,7 @@ import { UserModule } from './user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
 import { HomeworkModule } from './homework/homework.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { HomeworkModule } from './homework/homework.module';
     UserModule,
     AuthModule,
     HomeworkModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
