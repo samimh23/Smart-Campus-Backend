@@ -14,11 +14,15 @@ import { SubmissionService } from './submission.service';
 import { CreateSubmissionDto, UpdateSubmissionDto } from './dto/create-submission.dto';
 import { CreateGradeDto, UpdateGradeDto } from './dto/create-grade.dto';
 import { Protect } from '../auth/auth-guard';
+import { AIGradingService } from '../ai-grading/ai-grading.service';
 
 @Controller('submissions')
 @UseGuards(Protect)
 export class SubmissionController {
-  constructor(private readonly submissionService: SubmissionService) {}
+  constructor(
+    private readonly submissionService: SubmissionService,
+    private readonly aiGradingService: AIGradingService,
+  ) {}
 
   // Créer une soumission
   @Post()
@@ -92,5 +96,14 @@ export class SubmissionController {
     @Request() req,
   ) {
     return this.submissionService.getHomeworkStats(homeworkId, req.user.id);
+  }
+
+  // Noter automatiquement avec l'IA
+  @Post(':id/auto-grade')
+  async autoGradeSubmission(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ) {
+    return this.submissionService.autoGradeSubmission(id, req.user.id);
   }
 }

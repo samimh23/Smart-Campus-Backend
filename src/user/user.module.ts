@@ -13,6 +13,6 @@ import { ResetCode } from './entities/reset-code.entity';
   ],
   controllers: [UserController],
   providers: [UserService],
-  exports: [UserService]
+  exports: [UserService, TypeOrmModule]
 })
 export class UserModule {}
