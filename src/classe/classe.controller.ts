@@ -195,4 +195,32 @@ async getTeacherClassesBySubjects(
     throw error;
   }
 }
+
+
+
+
+
+
+
+@Get('student/:studentId/subjects')
+@UseGuards(Protect)
+@Roles(UserRole.STUDENT, UserRole.ADMIN, UserRole.TEACHER)
+async getStudentSubjects(
+  @Param('studentId', ParseIntPipe) studentId: number,
+) {
+  return this.classeService.getStudentSubjects(studentId);
+}
+
+
+
+@Get('student/:studentId/class')
+@UseGuards(Protect)
+@Roles(UserRole.STUDENT, UserRole.ADMIN, UserRole.TEACHER)
+async getStudentClass(
+  @Param('studentId', ParseIntPipe) studentId: number,
+) {
+  return this.classeService.getStudentClass(studentId);
+}
+
+
 }

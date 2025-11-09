@@ -18,6 +18,8 @@ import { Protect } from 'src/auth/auth-guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { join } from 'path';
+import { Roles } from 'src/auth/roles.decorator';
+import { UserRole } from 'src/user/entities/role.enum';
 
 @Controller('courses')
 @UseGuards(Protect)
@@ -53,13 +55,15 @@ export class CoursesController {
  
 
   @Post()
-  create(@Body() dto: CreateCourseDto & {
-    originalFileName?: string;
-    fileSize?: number;
-    fileType?: string;
-  }, @Req() req) {
-    return this.coursesService.create(dto, req.user);
-  }
+create(@Body() dto: CreateCourseDto & {
+  originalFileName?: string;
+  fileSize?: number;
+  fileType?: string;
+  classIds?: number[];
+  subject_id?: number;
+}, @Req() req) {
+  return this.coursesService.create(dto, req.user);
+}
 
   @Get()
   findAll() {
@@ -87,4 +91,15 @@ export class CoursesController {
 async findCoursesByClass(@Param('classId') classId: string) {
   return this.coursesService.findByClass(+classId);
 }
+
+
+
+
+@Get('student/:studentId')
+@UseGuards(Protect)
+@Roles(UserRole.STUDENT, UserRole.ADMIN, UserRole.TEACHER)
+async findCoursesByStudent(@Param('studentId') studentId: string) {
+  return this.coursesService.findByStudentId(+studentId);
+}
+
 }

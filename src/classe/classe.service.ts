@@ -485,4 +485,101 @@ async getTeacherClassesBySubjects(teacherId: number) {
   
   return teacherClasses;
 }
+
+
+
+async getStudentSubjects(studentId: number): Promise<any[]> {
+  try {
+    // Find the student and their class with subjects and teachers
+    const student = await this.userRepo.findOne({
+      where: { id: studentId, role: UserRole.STUDENT },
+      relations: ['classe', 'classe.subjects', 'classe.subjects.teachers']
+    });
+
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+
+    if (!student.classe) {
+      return []; // Student is not in any class
+    }
+
+    // Get the class with subject-teacher assignments
+    const classe = await this.classeRepo.findOne({
+      where: { id: student.classe.id },
+      relations: ['subjects', 'subjects.teachers']
+    });
+
+    if (!classe || !classe.subjects) {
+      return [];
+    }
+
+    // Enhance subjects with assigned teacher information
+    const enhancedSubjects = await Promise.all(
+      classe.subjects.map(async (subject) => {
+        let assignedTeacher = null;
+        
+        // Find assigned teacher from subject_teachers
+        if (classe.subject_teachers) {
+          const assignment = classe.subject_teachers.find(st => st.subjectId === subject.id);
+          if (assignment) {
+            assignedTeacher = await this.userRepo.findOne({
+              where: { id: assignment.teacherId },
+              select: ['id', 'first_name', 'last_name', 'email']
+            });
+          }
+        }
+
+        // If no specific assignment, get first teacher from subject
+        if (!assignedTeacher && subject.teachers && subject.teachers.length > 0) {
+          assignedTeacher = subject.teachers[0];
+        }
+
+        return {
+          id: subject.id,
+          name: subject.name,
+          assignedTeacher: assignedTeacher ? {
+            id: assignedTeacher.id,
+            first_name: assignedTeacher.first_name,
+            last_name: assignedTeacher.last_name,
+            email: assignedTeacher.email
+          } : null,
+          totalTeachers: subject.teachers?.length || 0
+        };
+      })
+    );
+
+    return enhancedSubjects;
+  } catch (error) {
+    console.error('Error fetching student subjects:', error);
+    throw error;
+  }
+}
+
+
+async getStudentClass(studentId: number): Promise<{ id: number; name: string; level?: string } | null> {
+  try {
+    const student = await this.userRepo.findOne({
+      where: { id: studentId, role: UserRole.STUDENT },
+      relations: ['classe']
+    });
+
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+
+    if (!student.classe) {
+      return null; // Student is not in any class
+    }
+
+    return {
+      id: student.classe.id,
+      name: student.classe.name,
+      level: student.classe.level
+    };
+  } catch (error) {
+    console.error('Error fetching student class:', error);
+    throw error;
+  }
+}
 }

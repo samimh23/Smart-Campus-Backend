@@ -302,6 +302,12 @@ async resetPassword(email: string, otp: string, newPassword: string) {
 }
 
 
+  async getUsersByRole(role: UserRole): Promise<User[]> {
+    return this.userRepo.find({
+      where: { role },
+      order: { first_name: 'ASC' }
+    });
+  }
 
 
   async generateUserTokens(user: User) {

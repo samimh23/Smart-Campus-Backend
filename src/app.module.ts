@@ -10,6 +10,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { CoursesModule } from './cours/courses.module';
 import { ClasseModule } from './classe/classe.module';
 import { SubjectModule } from './subject/subject.module';
+import { AIModule } from './Ai/ai.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { SubjectModule } from './subject/subject.module';
     CoursesModule,
     ClasseModule,
     SubjectModule,
+    AIModule,
   ],
   controllers: [AppController],
   providers: [AppService],

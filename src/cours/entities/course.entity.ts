@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinTable, ManyToMany, JoinColumn } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { Classe } from 'src/classe/entities/classe.entity';
+import { Subject } from 'src/subject/entities/subject.entity';
 
 @Entity()
 export class Course {
@@ -46,4 +47,11 @@ export class Course {
   @ManyToMany(() => Classe, (classe) => classe.courses)
   @JoinTable()
   classes: Classe[];
+
+
+   @ManyToOne(() => Subject, { nullable: true })
+  @JoinColumn({ name: 'subject_id' })
+  subjectRelation: Subject;
+
+  
 }

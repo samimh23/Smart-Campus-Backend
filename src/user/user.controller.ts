@@ -200,5 +200,12 @@ async logout(@Req() req) {
   return this.userService.logout(userId);
 }
 
+
+ @Get('role/:role')
+  @Roles(UserRole.ADMIN)
+  async getByRole(@Param('role') role: UserRole) {
+    return this.userService.getUsersByRole(role);
+  }
+
   
 }
