@@ -6,7 +6,7 @@ import { User } from 'src/user/entities/user.entity';
 export class Subject {
   @PrimaryGeneratedColumn()
   id: number;
-
+    
   @Column({ unique: true })
   name: string;
 

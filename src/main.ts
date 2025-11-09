@@ -5,32 +5,42 @@ import { LoggingInterceptor } from './intercepteurs';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as express from 'express';
+import * as dotenv from 'dotenv';
 
 async function bootstrap() {
+  // ✅ Load environment variables from .env
+  dotenv.config();
+
   // Create a Nest Express app (needed for serving static files)
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // Optional: enable validation globally if needed
+  // Optional: enable validation globally
   // app.useGlobalPipes(new ValidationPipe());
 
-  // Logging interceptor (you already had this)
+  // Logging interceptor
   app.useGlobalInterceptors(new LoggingInterceptor());
 
-  // ✅ Enable CORS for your frontend apps
+  // ✅ Get values from .env with fallbacks
+  const PORT = process.env.PORT || 3000;
+  const FRONTEND_ORIGINS = process.env.FRONTEND_ORIGINS
+    ? process.env.FRONTEND_ORIGINS.split(',')
+    : ['http://localhost:3001', 'http://localhost:3002'];
+
+  // ✅ Enable CORS
   app.enableCors({
-    origin: ['http://localhost:3001', 'http://localhost:3002'], // 👈 Your frontends
-    credentials: true,               // 👈 Allow cookies if used
+    origin: FRONTEND_ORIGINS,
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  // ✅ Serve uploaded files from the 'uploads' folder
-  // This means anything inside /uploads will be available at http://localhost:3000/uploads/...
+  // ✅ Serve static files (uploads)
   app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
 
-  await app.listen(3000);
-  console.log('🚀 Server running on http://localhost:3000');
-  console.log('📂 Uploaded files are served from http://localhost:3000/uploads');
+  await app.listen(PORT);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`📂 Uploaded files are served from http://localhost:${PORT}/uploads`);
+  console.log(`🌍 CORS allowed for: ${FRONTEND_ORIGINS.join(', ')}`);
 }
 
 bootstrap();
