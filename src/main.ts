@@ -3,34 +3,30 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { LoggingInterceptor } from './intercepteurs';
 import { join } from 'path';
-import { NestExpressApplication } from '@nestjs/platform-express';
+import { existsSync, mkdirSync } from 'fs';
 import * as express from 'express';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  // Create a Nest Express app (needed for serving static files)
-  const app = await NestFactory.create(AppModule);
-
-  // Optional: enable validation globally if needed
-  // app.useGlobalPipes(new ValidationPipe());
-
-  // Logging interceptor (you already had this)
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  //app.useGlobalPipes(new ValidationPipe())
   app.useGlobalInterceptors(new LoggingInterceptor());
-
-  // ✅ Enable CORS for your frontend apps
-  app.enableCors({
-    origin: ['http://localhost:3001', 'http://localhost:3002'], // 👈 Your frontends
-    credentials: true,               // 👈 Allow cookies if used
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/',
   });
-
-  // ✅ Serve uploaded files from the 'uploads' folder
-  // This means anything inside /uploads will be available at http://localhost:3000/uploads/...
-  app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
-
-  await app.listen(3000);
-  console.log('🚀 Server running on http://localhost:3000');
-  console.log('📂 Uploaded files are served from http://localhost:3000/uploads');
+  // Serve static files
+  const uploadDir = join(process.cwd(), 'uploads');
+  if (!existsSync(uploadDir)) {
+    mkdirSync(uploadDir);
+  }
+  app.use('/uploads', express.static(uploadDir));
+  app.enableCors({
+    origin: ['http://192.168.0.134:3000', 'http://localhost:3000'], // 👈 Frontend origin
+    credentials: true,               // 👈 Allow cookies (needed for HttpOnly auth)
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+  await app.listen(5000);
 }
 
 bootstrap();

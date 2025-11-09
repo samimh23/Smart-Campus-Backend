@@ -5,6 +5,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
+import { QuizModule } from './quiz/quiz.module';
+import { GroqService } from './groq.service';
+import { GroqModule } from './groq.module';
+import { ExamModule } from './exam/exam.module';
+import { UploadModule } from './upload.module';
+import { ExplainModule } from './explain/explain.module';
 import { TutorModule } from './tutor/tutor.module';
 import { HomeworkModule } from './homework/homework.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -20,8 +26,8 @@ import { AIModule } from './Ai/ai.module';
       host: 'localhost',
       port: 5432,
       username: 'postgres',
-      password: 'sami',
-      database: 'db_Smart',
+      password: 'test',
+      database: 'db_name',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
       autoLoadEntities: true, // 👈 Automatically loads all entities registered with TypeOrmModule.forFeature()
@@ -36,6 +42,11 @@ import { AIModule } from './Ai/ai.module';
     },
     UserModule,
     AuthModule,
+    QuizModule,
+    GroqModule,
+    ExamModule,
+    UploadModule,
+    ExplainModule,
     TutorModule,
     HomeworkModule,
     NotificationsModule,
