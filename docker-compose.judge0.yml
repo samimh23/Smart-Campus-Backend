@@ -1,0 +1,48 @@
+services:
+  judge0-server:
+    image: judge0/judge0:1.13.0
+    container_name: smart-campus-judge0
+    ports:
+      - "2358:2358"
+    environment:
+      - REDIS_HOST=judge0-redis
+      - REDIS_PORT=6379
+      - POSTGRES_HOST=judge0-db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=judge0
+      - POSTGRES_USER=judge0
+      - POSTGRES_PASSWORD=YourSecurePassword
+    depends_on:
+      - judge0-db
+      - judge0-redis
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  judge0-db:
+    image: postgres:13
+    container_name: smart-campus-judge0-db
+    environment:
+      - POSTGRES_DB=judge0
+      - POSTGRES_USER=judge0
+      - POSTGRES_PASSWORD=YourSecurePassword
+    volumes:
+      - judge0-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  judge0-redis:
+    image: redis:7-alpine
+    container_name: smart-campus-judge0-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - judge0-redis-data:/data
+
+volumes:
+  judge0-db-data:
+  judge0-redis-data:
+
+# To start: docker compose -f docker-compose.judge0.yml up -d
+# Judge0 API will be available at http://localhost:2358
+# Test with: curl http://localhost:2358/languages

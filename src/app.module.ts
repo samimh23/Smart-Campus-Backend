@@ -11,6 +11,13 @@ import { GroqModule } from './groq.module';
 import { ExamModule } from './exam/exam.module';
 import { UploadModule } from './upload.module';
 import { ExplainModule } from './explain/explain.module';
+import { TutorModule } from './tutor/tutor.module';
+import { HomeworkModule } from './homework/homework.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { CoursesModule } from './cours/courses.module';
+import { ClasseModule } from './classe/classe.module';
+import { SubjectModule } from './subject/subject.module';
+import { AIModule } from './Ai/ai.module';
 
 @Module({
   imports: [
@@ -29,7 +36,7 @@ import { ExplainModule } from './explain/explain.module';
     {
       ...JwtModule.register({
           secret:  'dggredg,erg,ergz464rzerr', // Vous pouvez aussi mettre une clé par défaut
-          signOptions: { expiresIn: '24h' },
+          signOptions: {},
         }),
         global: true
     },
@@ -40,6 +47,13 @@ import { ExplainModule } from './explain/explain.module';
     ExamModule,
     UploadModule,
     ExplainModule,
+    TutorModule,
+    HomeworkModule,
+    NotificationsModule,
+    CoursesModule,
+    ClasseModule,
+    SubjectModule,
+    AIModule,
   ],
   controllers: [AppController],
   providers: [AppService],
