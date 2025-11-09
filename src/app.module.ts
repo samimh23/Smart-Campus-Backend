@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
+import { TutorModule } from './tutor/tutor.module';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { AuthModule } from './auth/auth.module';
       host: 'localhost',
       port: 5432,
       username: 'postgres',
-      password: 'wiem2002',
+      password: 'sami',
       database: 'db_Smart',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
@@ -29,6 +30,7 @@ import { AuthModule } from './auth/auth.module';
     },
     UserModule,
     AuthModule,
+    TutorModule,
   ],
   controllers: [AppController],
   providers: [AppService],

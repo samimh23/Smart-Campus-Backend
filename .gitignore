@@ -11,7 +11,10 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
-
+FINAL_ERROR_FIXES.md
+CODE_EXECUTION_GUIDE.md
+ERROR_FIXES.md
+INTEGRATION_GUIDE.md
 # OS
 .DS_Store
 
