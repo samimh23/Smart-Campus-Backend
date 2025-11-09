@@ -124,18 +124,56 @@ async resetPassword(@Body() body: { email: string; otp: string; newPassword: str
 
  @Post('/create-initial-admin')
 async createInitialAdmin() {
+  // Check if admin already exists (catch the error if no admin found)
+  try {
+    const existingAdmins = await this.userService.findByRole(UserRole.ADMIN);
+    if (existingAdmins && existingAdmins.length > 0) {
+      return { 
+        success: false, 
+        message: 'Admin account already exists',
+        existingAdmins: existingAdmins.length 
+      };
+    }
+  } catch (error) {
+    // No admin exists yet, continue with creation
+  }
+
+  // Create admin account
+  const hashedPassword = await require('bcrypt').hash('admin123', 10);
+  
   const adminData = {
-    first_name: 'Wiem',
-    last_name: 'Ayari',
-    email: 'wiem.ayari@esprit.tn',
-    password: 'admin123',
+    first_name: 'Admin',
+    last_name: 'User',
+    email: 'admin@smartcampus.com',
+    password: hashedPassword,
     role: UserRole.ADMIN,
     username: 'admin',
-    phone: '', // or a default value if required
-    is_active: true, // or false depending on your app logic
+    phone: 1111111111,
+    is_active: true,
+    UserRole: UserRole.ADMIN,
   };
 
-  
+  // Save to database
+  try {
+    const result = await this.userService['userRepo'].save(
+      this.userService['userRepo'].create(adminData)
+    );
+    
+    return {
+      success: true,
+      message: 'Initial admin account created successfully! ✅',
+      credentials: {
+        email: 'admin@smartcampus.com',
+        password: 'admin123',
+        note: '⚠️ Please change this password after first login!'
+      }
+    };
+  } catch (error) {
+    return { 
+      success: false, 
+      message: 'Failed to create admin: ' + error.message 
+    };
+  }
 }
 
 
