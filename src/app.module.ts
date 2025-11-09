@@ -6,6 +6,12 @@ import { UserModule } from './user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
 import { TutorModule } from './tutor/tutor.module';
+import { HomeworkModule } from './homework/homework.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { CoursesModule } from './cours/courses.module';
+import { ClasseModule } from './classe/classe.module';
+import { SubjectModule } from './subject/subject.module';
+import { AIModule } from './Ai/ai.module';
 
 @Module({
   imports: [
@@ -24,13 +30,19 @@ import { TutorModule } from './tutor/tutor.module';
     {
       ...JwtModule.register({
           secret:  'dggredg,erg,ergz464rzerr', // Vous pouvez aussi mettre une clé par défaut
-          signOptions: { expiresIn: '24h' },
+          signOptions: {},
         }),
         global: true
     },
     UserModule,
     AuthModule,
     TutorModule,
+    HomeworkModule,
+    NotificationsModule,
+    CoursesModule,
+    ClasseModule,
+    SubjectModule,
+    AIModule,
   ],
   controllers: [AppController],
   providers: [AppService],

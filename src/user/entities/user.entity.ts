@@ -1,4 +1,3 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { RefreshToken } from './refreshtoken.entity';
 import { UserRole } from './role.enum';
 import { Lesson } from './lesson.entity';
@@ -6,6 +5,11 @@ import { Exercise } from './exercise.entity';
 import { UserProgress } from './user-progress.entity';
 import { UserSubmission } from './user-submission.entity';
 import { UserAchievement } from './achievement.entity';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToMany, JoinTable, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Course } from 'src/cours/entities/course.entity';
+import { Subject } from 'src/subject/entities/subject.entity';
+import { Classe } from 'src/classe/entities/classe.entity';
+
 
 @Entity()
 export class User {
@@ -15,6 +19,7 @@ export class User {
   @Column({ type: 'enum', enum: UserRole })
   role: UserRole;
 
+  
   @Column()
   first_name: string;
 
@@ -72,4 +77,39 @@ export class User {
 
   @OneToMany(() => UserAchievement, (achievement) => achievement.user)
   achievements: UserAchievement[];
+  // @OneToMany(() => RefreshToken, (token) => token.user)
+  // refreshTokens: RefreshToken[]
+
+  
+
+
+
+
+
+  @OneToMany(() => Course, (course) => course.teacher)
+  courses: Course[];
+
+  
+
+
+
+    @ManyToMany(() => Subject, subject => subject.teachers, { cascade: true })
+  @JoinTable() 
+  subjects: Subject[];
+
+
+  @ManyToOne(() => Classe, (classe) => classe.students, { nullable: true })
+  @JoinColumn({ name: 'classe_id' })
+  classe: Classe;
+
+  @Column({ nullable: true })
+  classe_id: number;
+
+    @OneToMany(() => Classe, (classe) => classe.teacher)
+  teacherClasses: Classe[];
+
+
+  
+   
+
 }
