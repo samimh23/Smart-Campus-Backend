@@ -6,8 +6,12 @@ import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import * as express from 'express';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import * as dotenv from 'dotenv';
 
 async function bootstrap() {
+
+    dotenv.config();
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   //app.useGlobalPipes(new ValidationPipe())
   app.useGlobalInterceptors(new LoggingInterceptor());

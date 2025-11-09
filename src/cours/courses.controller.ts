@@ -65,6 +65,10 @@ create(@Body() dto: CreateCourseDto & {
   return this.coursesService.create(dto, req.user);
 }
 
+@Get('subjects/all')
+async getAllSubjects() {
+  return this.coursesService.getAllSubjects();
+}
   @Get()
   findAll() {
     return this.coursesService.findAll();

@@ -26,33 +26,48 @@ export class CoursesService {
     private readonly subjectRepo: Repository<Subject>,
   ) {}
 
-  async create(createCourseDto: CreateCourseDto & { 
-    originalFileName?: string;
-    fileSize?: number;
-    fileType?: string;
-    classIds?: number[];
-    subject_id?: number;
-  }, user: User) {
-    const course = this.courseRepository.create({
-      ...createCourseDto,
-      teacher: user,
-    });
+  // src/courses/courses.service.ts (update the create method)
+async create(createCourseDto: CreateCourseDto & { 
+  originalFileName?: string;
+  fileSize?: number;
+  fileType?: string;
+  classIds?: number[];
+  subject_id?: number;
+}, user: User) {
+  const course = this.courseRepository.create({
+    ...createCourseDto,
+    teacher: user,
+  });
 
-    // If classIds are provided, link the course to those classes
-    if (createCourseDto.classIds && createCourseDto.classIds.length > 0) {
-      const classes = await this.classeRepo.findByIds(createCourseDto.classIds);
-      course.classes = classes;
-    }
-
-    // If subject_id is provided, link the course to that subject
-    if (createCourseDto.subject_id) {
-      const subject = await this.subjectRepo.findOne({ where: { id: createCourseDto.subject_id } });
-      course.subjectRelation = subject;
-    }
-
-    return this.courseRepository.save(course);
+  // If classIds are provided, link the course to those classes
+  if (createCourseDto.classIds && createCourseDto.classIds.length > 0) {
+    const classes = await this.classeRepo.findByIds(createCourseDto.classIds);
+    course.classes = classes;
   }
 
+  // If subject_id is provided, link the course to that subject
+  if (createCourseDto.subject_id) {
+    const subject = await this.subjectRepo.findOne({ 
+      where: { id: createCourseDto.subject_id },
+      relations: ['teachers']
+    });
+    
+    if (subject) {
+      course.subjectRelation = subject;
+      // Also set the subject string for backward compatibility
+      course.subject = subject.name;
+    }
+  }
+
+  return this.courseRepository.save(course);
+}
+
+// src/courses/courses.service.ts (add this method)
+async getAllSubjects() {
+  return this.subjectRepo.find({
+    order: { name: 'ASC' }
+  });
+}
   findAll() {
     return this.courseRepository.find({
       relations: ['teacher'],
