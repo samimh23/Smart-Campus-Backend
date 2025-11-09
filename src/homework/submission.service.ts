@@ -8,6 +8,7 @@ import { User } from '../user/entities/user.entity';
 import { CreateSubmissionDto, UpdateSubmissionDto } from './dto/create-submission.dto';
 import { CreateGradeDto, UpdateGradeDto } from './dto/create-grade.dto';
 import { UserRole } from '../user/entities/role.enum';
+import { AIGradingService } from '../ai-grading/ai-grading.service';
 
 @Injectable()
 export class SubmissionService {
@@ -20,6 +21,7 @@ export class SubmissionService {
     private homeworkRepository: Repository<Homework>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private aiGradingService: AIGradingService,
   ) {}
 
   // Créer une soumission
@@ -243,5 +245,60 @@ export class SubmissionService {
       submissions: submissions,
       grades: grades
     };
+  }
+
+  // Noter automatiquement avec l'IA
+  async autoGradeSubmission(submissionId: number, teacherId: number): Promise<Grade> {
+    // Vérifier que l'utilisateur est un enseignant
+    const teacher = await this.userRepository.findOne({
+      where: { id: teacherId, role: UserRole.TEACHER }
+    });
+
+    if (!teacher) {
+      throw new ForbiddenException('Seuls les enseignants peuvent noter');
+    }
+
+    // Récupérer la soumission avec le devoir
+    const submission = await this.submissionRepository.findOne({
+      where: { id: submissionId },
+      relations: ['homework', 'homework.teacher']
+    });
+
+    if (!submission) {
+      throw new NotFoundException('Soumission non trouvée');
+    }
+
+    // Vérifier que l'enseignant est le propriétaire du devoir
+    if (submission.homework.teacher_id !== teacherId) {
+      throw new ForbiddenException('Vous ne pouvez noter que les soumissions de vos propres devoirs');
+    }
+
+    // Vérifier que la soumission est bien soumise
+    if (!submission.is_submitted) {
+      throw new BadRequestException('Cette soumission n\'est pas encore rendue');
+    }
+
+    // Vérifier si une note existe déjà
+    const existingGrade = await this.gradeRepository.findOne({
+      where: { submission_id: submissionId }
+    });
+
+    if (existingGrade) {
+      throw new BadRequestException('Une note existe déjà pour cette soumission. Supprimez-la d\'abord.');
+    }
+
+    // Appeler l'IA pour noter
+    const aiResult = await this.aiGradingService.gradeSubmission(submission, submission.homework);
+
+    // Créer la note avec les résultats de l'IA
+    const grade = this.gradeRepository.create({
+      submission_id: submissionId,
+      teacher_id: teacherId,
+      grade: aiResult.grade,
+      feedback: aiResult.feedback,
+      is_final: false, // L'enseignant peut ajuster
+    });
+
+    return await this.gradeRepository.save(grade);
   }
 }

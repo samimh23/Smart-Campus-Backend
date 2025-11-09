@@ -24,6 +24,9 @@ export class Homework {
   @Column({ nullable: true })
   grade_level: string;
 
+  @Column({ nullable: true })
+  attachment_url: string;
+
   @ManyToOne(() => User, { eager: true })
   @JoinColumn({ name: 'teacher_id' })
   teacher: User;

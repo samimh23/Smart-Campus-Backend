@@ -20,6 +20,10 @@ export class CreateHomeworkDto {
   @IsString()
   grade_level?: string;
 
+  @IsOptional()
+  @IsString()
+  attachment_url?: string;
+
   @IsNumber()
   teacher_id: number;
 }

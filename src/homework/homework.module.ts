@@ -9,11 +9,13 @@ import { HomeworkSubmission } from './entities/homework-submission.entity';
 import { Grade } from './entities/grade.entity';
 import { User } from '../user/entities/user.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { AIGradingModule } from '../ai-grading/ai-grading.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Homework, HomeworkSubmission, Grade, User]),
-    NotificationsModule
+    NotificationsModule,
+    AIGradingModule,
   ],
   controllers: [HomeworkController, SubmissionController],
   providers: [HomeworkService, SubmissionService],

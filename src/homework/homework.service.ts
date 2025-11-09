@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Homework } from './entities/homework.entity';
+import { HomeworkSubmission } from './entities/homework-submission.entity';
+import { Grade } from './entities/grade.entity';
 import { CreateHomeworkDto } from './dto/create-homework.dto';
 import { UpdateHomeworkDto } from './dto/update-homework.dto';
 import { User } from '../user/entities/user.entity';
@@ -13,6 +15,10 @@ export class HomeworkService {
   constructor(
     @InjectRepository(Homework)
     private homeworkRepository: Repository<Homework>,
+    @InjectRepository(HomeworkSubmission)
+    private submissionRepository: Repository<HomeworkSubmission>,
+    @InjectRepository(Grade)
+    private gradeRepository: Repository<Grade>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private notificationsGateway: NotificationsGateway,
@@ -95,6 +101,20 @@ export class HomeworkService {
       throw new ForbiddenException('Vous ne pouvez supprimer que vos propres devoirs');
     }
 
+    // Supprimer d'abord les notes associées aux soumissions de ce devoir
+    const submissions = await this.submissionRepository.find({
+      where: { homework_id: id }
+    });
+
+    // Supprimer les notes de chaque soumission
+    for (const submission of submissions) {
+      await this.gradeRepository.delete({ submission_id: submission.id });
+    }
+
+    // Supprimer les soumissions associées au devoir
+    await this.submissionRepository.delete({ homework_id: id });
+
+    // Enfin, supprimer le devoir
     await this.homeworkRepository.delete(id);
   }
 
