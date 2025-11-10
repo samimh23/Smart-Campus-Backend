@@ -25,12 +25,12 @@ async function bootstrap() {
   }
   app.use('/uploads', express.static(uploadDir));
   app.enableCors({
-    origin: ['http://192.168.0.134:3000', 'http://localhost:3000'], // 👈 Frontend origin
+    origin: ['http://localhost:3002', 'http://localhost:3001','http://172.28.208.19:3001'], // 👈 Frontend origin
     credentials: true,               // 👈 Allow cookies (needed for HttpOnly auth)
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
-  await app.listen(5000);
+  await app.listen(3000);
 }
 
 bootstrap();

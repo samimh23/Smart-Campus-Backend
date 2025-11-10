@@ -28,9 +28,19 @@ generateLesson(@Request() req, @Body() generateLessonDto: GenerateLessonDto) {
   );
 }
 
-@Post('generate-exercise')
+  @Post('generate-exercise')
   generateExercise(@Request() req, @Body() generateExerciseDto: GenerateExerciseDto) {
     return this.tutorService.generateExercise(req.user.id, generateExerciseDto.language, generateExerciseDto.subject);
+  }
+
+  @Get('lessons')
+  getAllLessons(@Request() req) {
+    return this.tutorService.getAllLessons(req.user.id);
+  }
+
+  @Get('exercises')
+  getAllExercises(@Request() req) {
+    return this.tutorService.getAllExercises(req.user.id);
   }
 
   

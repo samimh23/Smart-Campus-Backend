@@ -158,6 +158,22 @@ export class TutorService {
     return { message: 'API key updated successfully' };
   }
 
+  // 📚 Get All User Lessons
+  async getAllLessons(userId: number) {
+    return await this.lessonRepository.find({
+      where: { userId },
+      order: { createdAt: 'DESC' }
+    });
+  }
+
+  // 💪 Get All User Exercises
+  async getAllExercises(userId: number) {
+    return await this.exerciseRepository.find({
+      where: { userId },
+      order: { createdAt: 'DESC' }
+    });
+  }
+
   // 🤖 Private AI Methods
   private async generateLessonWithAI(apiKey: string, language: string, subject: string) {
     const subjectNames: Record<string, string> = {

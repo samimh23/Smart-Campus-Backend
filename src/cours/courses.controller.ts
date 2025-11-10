@@ -22,12 +22,13 @@ import { Roles } from 'src/auth/roles.decorator';
 import { UserRole } from 'src/user/entities/role.enum';
 
 @Controller('courses')
-@UseGuards(Protect)
+// Remove global guard - apply to individual endpoints instead
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
   // ✅ Upload file for a course (PDF, Word, PowerPoint, etc.)
   @Post('upload')
+  @UseGuards(Protect)
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -55,6 +56,7 @@ export class CoursesController {
  
 
   @Post()
+  @UseGuards(Protect)
 create(@Body() dto: CreateCourseDto & {
   originalFileName?: string;
   fileSize?: number;
@@ -80,11 +82,13 @@ async getAllSubjects() {
   }
 
   @Patch(':id')
+  @UseGuards(Protect)
   update(@Param('id') id: string, @Body() dto: UpdateCourseDto, @Req() req) {
     return this.coursesService.update(+id, dto, req.user);
   }
 
   @Delete(':id')
+  @UseGuards(Protect)
   remove(@Param('id') id: string, @Req() req) {
     return this.coursesService.remove(+id, req.user);
  

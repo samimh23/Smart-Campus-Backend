@@ -8,7 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { QuizModule } from './quiz/quiz.module';
 import { GroqModule } from './groq.module';
 import { ExamModule } from './exam/exam.module';
-import { UploadModule } from './upload.module';
+import { UploadModule } from './upload/upload.module';
 import { ExplainModule } from './explain/explain.module';
 import { TutorModule } from './tutor/tutor.module';
 import { HomeworkModule } from './homework/homework.module';

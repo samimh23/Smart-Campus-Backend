@@ -14,6 +14,7 @@ export class QuizService {
   ){}
   async generateQuiz(usermsg: string, userId: number) {
     try {
+      console.log('🎯 Creating quiz for userId:', userId);
       // Generate quiz JSON from AI
       const quizJson = await this.groqService.createQuizJson(
         usermsg,
@@ -47,9 +48,12 @@ export class QuizService {
 
   async findAll(userId: number) {
     try {
+      console.log('🔍 Finding quizzes for userId:', userId);
       const quizes = await this.quizRepository.find({ where: { user: { id: userId } } });
+      console.log('✅ Found quizzes:', quizes.length);
       return quizes;
     } catch (error) {
+      console.error('❌ Error finding quizzes:', error);
       throw new HttpException(
         'Failed to retreive quiz. Please try again later.',
         HttpStatus.INTERNAL_SERVER_ERROR,
